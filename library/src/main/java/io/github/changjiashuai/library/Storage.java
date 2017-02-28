@@ -6,8 +6,10 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import static android.content.ContentValues.TAG;
 
@@ -91,15 +93,93 @@ public class Storage {
         }
 
         /**
+         * 向指定的文件中写入指定的数据
+         *
          * @param name    文件名
          * @param content 文件内容
          * @param mode    MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
          *                MODE_WORLD_WRITEABLE 已被弃用
          */
-        public void openFileOutput(String name, String content, int mode) throws IOException {
-            FileOutputStream fos = mContext.openFileOutput(name, mode);
-            fos.write(content.getBytes());
-            fos.close();
+        public void writeFileData(String name, String content, int mode) {
+            FileOutputStream fos = null;
+            try {
+                fos = mContext.openFileOutput(name, mode);
+                fos.write(content.getBytes());
+            } catch (IOException e) {
+                try {
+                    if (fos != null) {
+                        fos.close();
+                    }
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (fos != null) {
+                        fos.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        /**
+         * 打开指定文件，读取其数据，返回字符串对象
+         */
+        public String readFileData(String fileName) {
+            String result = "";
+            FileInputStream fis = null;
+            try {
+                fis = mContext.openFileInput(fileName);
+                //获取文件长度
+                int length = fis.available();
+                byte[] buffer = new byte[length];
+                if (fis.read(buffer) != -1) {
+                    //将byte数组转换成指定格式的字符串
+                    result = getString(buffer, "UTF-8");
+                }
+            } catch (Exception e) {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (fis != null) {
+                        fis.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return result;
+        }
+
+        private String getString(final byte[] data, final String charset) {
+            if (data == null) {
+                throw new IllegalArgumentException("Parameter may not be null");
+            }
+            return getString(data, 0, data.length, charset);
+        }
+
+        private String getString(final byte[] data, int offset, int length, String charset) {
+            if (data == null) {
+                throw new IllegalArgumentException("Parameter may not be null");
+            }
+            if (charset == null || charset.length() == 0) {
+                throw new IllegalArgumentException("charset may not be null or empty");
+            }
+            try {
+                return new String(data, offset, length, charset);
+            } catch (UnsupportedEncodingException e) {
+                return new String(data, offset, length);
+            }
         }
 
         /**
@@ -107,7 +187,7 @@ public class Storage {
          * @param mode MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
          *             MODE_WORLD_WRITEABLE 已被弃用
          * @return 在您的内部存储空间内创建（或打开现有的）目录。
-         * @see #openFileOutput(String, String, int)
+         * @see #writeFileData(String, String, int)
          */
         public File getDir(String name, int mode) {
             return mContext.getDir(name, mode);
@@ -139,24 +219,24 @@ public class Storage {
 
 
     /**
-     // =====================================================================================
-     //
-     // 外部存储
-     //
-     //  /storage/sdcard/Android/data目录或者说/storage/emulated/0/Android/data包目录属于外部存储。
-     //
-     //  比如我们的内部存储卡。
-     //  注意,Google官方建议开发者将App的数据存储在私有目录即/storage/emulated/0/Android/data包下，
-     //  这样卸载App时数据会随之被系统清除，不会造成数据残留。
-     //
-     //     外部应用私有数据：/storage/emulated/0/Android/data/包名/XXX
-     //     外部公有数据：/storage/emulated/0
-     //
-     //     从Android 1.0开始，写操作受权限WRITE_EXTERNAL_STORAGE保护。
-     //     从Android 4.1开始，读操作受权限READ_EXTERNAL_STORAGE保护。
-     //     从Android 4.4开始，应用可以管理在它外部存储上的特定包名目录，而不用获取WRITE_EXTERNAL_STORAGE权限。
-     //
-     // =====================================================================================
+     * 外部存储
+     *
+     * <li> /storage/sdcard/Android/data目录或者说/storage/emulated/0/Android/data包目录属于外部存储。
+     *
+     * <li> 比如我们的内部存储卡。</li>
+     *
+     * <li>注意,Google官方建议开发者将App的数据存储在私有目录即/storage/emulated/0/Android/data包下，
+     * 这样卸载App时数据会随之被系统清除，不会造成数据残留。<li/>
+     *
+     * <li>外部应用私有数据：/storage/emulated/0/Android/data/包名/XXX </li>
+     *
+     * <li>外部公有数据：/storage/emulated/0 </li>
+     *
+     * <li>从Android 1.0开始，写操作受权限WRITE_EXTERNAL_STORAGE保护。</li>
+     *
+     * <li>从Android 4.1开始，读操作受权限READ_EXTERNAL_STORAGE保护。</li>
+     *
+     * <li>从Android 4.4开始，应用可以管理在它外部存储上的特定包名目录，而不用获取WRITE_EXTERNAL_STORAGE权限。</li>
      */
     public class ExternalStorage {
 
