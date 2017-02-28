@@ -1,7 +1,6 @@
 package io.github.changjiashuai.library;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
@@ -37,40 +36,33 @@ public class Storage {
         return mExternalStorage;
     }
 
-    //内存:全称内部存储,英文名(InternalStorage)。
-    //当我们在打开DDMS下的File Explorer面板的时候，/data目录就是所谓的内部存储 (ROM )。
-    //但是注意，当手机没有root的时候不能打开此文件夹。
-    // --> /data/app
-    // 1.app文件夹里存放着我们所有安装的app的apk文件
-
-    // --> /data/data
-    // 2.第二个文件夹是data,也就是我们常说的/data/data目录(存储包私有数据)。
-
-
-    //    内部数据：/data/data/包名/XXX
-
-    // 此目录下将每一个APP的存储内容按照包名分类存放好。
-    //    比如:
-    //    1.data/data/包名/shared_prefs 存放该APP内的SP信息
-    //    2.data/data/包名/databases 存放该APP的数据库信息
-    //    3.data/data/包名/files 将APP的文件信息存放在files文件夹
-    //    4.data/data/包名/cache 存放的是APP的缓存信息
+    /**
+     * 内部存储
+     *
+     * <p>当我们在打开DDMS下的File Explorer面板的时候，/data目录就是所谓的内部存储 (ROM )。 但是注意，当手机没有root的时候不能打开此文件夹。</p>
+     *
+     * <li>'/data/app' :--> app文件夹里存放着我们所有安装的app的apk文件</li> <br/>
+     *
+     * <li>'/data/data':-->第二个文件夹是data,也就是我们常说的/data/data目录(存储包私有数据)</li>
+     *
+     * <li>内部数据：/data/data/包名/XXX</li>
+     *
+     * //此目录下将每一个APP的存储内容按照包名分类存放好。 比如:
+     *
+     * <li>1.data/data/包名/shared_prefs 存放该APP内的SP信息
+     *
+     * <li>2.data/data/包名/databases 存放该APP的数据库信息
+     *
+     * <li>3.data/data/包名/files 将APP的文件信息存放在files文件夹
+     *
+     * <li>/4.data/data/包名/cache 存放的是APP的缓存信息
+     */
     public class InternalStorage {
 
         private Context mContext;
 
         private InternalStorage(Context context) {
             mContext = context;
-        }
-
-        /* 'data/data/包名/shared_prefs' */
-        public SharedPreferences getSharedPreferences(String name, int mode) {
-            return mContext.getSharedPreferences(name, mode);
-        }
-
-        /* 'data/data/包名/databases' */
-        public File getDatabasePath(String name) {
-            return mContext.getDatabasePath(name);
         }
 
         /**
