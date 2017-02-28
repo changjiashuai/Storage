@@ -1,14 +1,15 @@
 package io.github.changjiashuai.library;
 
 import android.content.Context;
-import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * <a href="https://developer.android.com/guide/topics/data/data-storage.html">data-storage</a>
@@ -137,21 +138,29 @@ public class Storage {
     }
 
 
-    //外存:
-    // /storage/sdcard/Android/data目录或者说/storage/emulated/0/Android/data包目录属于外部存储。
-    // 比如我们的内部存储卡。
-    // 注意,Google官方建议开发者将App的数据存储在私有目录即/storage/emulated/0/Android/data包下，
-    // 这样卸载App时数据会随之被系统清除，不会造成数据残留。
-
-
-    //    外部应用私有数据：/storage/emulated/0/Android/data/包名/XXX
-    //    外部公有数据：/storage/emulated/0
-
-    //    从Android 1.0开始，写操作受权限WRITE_EXTERNAL_STORAGE保护。
-    //    从Android 4.1开始，读操作受权限READ_EXTERNAL_STORAGE保护。
-    //    从Android 4.4开始，应用可以管理在它外部存储上的特定包名目录，而不用获取WRITE_EXTERNAL_STORAGE权限。
+    /**
+     // =====================================================================================
+     //
+     // 外部存储
+     //
+     //  /storage/sdcard/Android/data目录或者说/storage/emulated/0/Android/data包目录属于外部存储。
+     //
+     //  比如我们的内部存储卡。
+     //  注意,Google官方建议开发者将App的数据存储在私有目录即/storage/emulated/0/Android/data包下，
+     //  这样卸载App时数据会随之被系统清除，不会造成数据残留。
+     //
+     //     外部应用私有数据：/storage/emulated/0/Android/data/包名/XXX
+     //     外部公有数据：/storage/emulated/0
+     //
+     //     从Android 1.0开始，写操作受权限WRITE_EXTERNAL_STORAGE保护。
+     //     从Android 4.1开始，读操作受权限READ_EXTERNAL_STORAGE保护。
+     //     从Android 4.4开始，应用可以管理在它外部存储上的特定包名目录，而不用获取WRITE_EXTERNAL_STORAGE权限。
+     //
+     // =====================================================================================
+     */
     public class ExternalStorage {
 
+        private static final String TAG = "ExternalStorage";
         private Context mContext;
 
         private ExternalStorage(Context context) {
@@ -176,6 +185,25 @@ public class Storage {
             return Environment.getExternalStorageState();
         }
 
+        /* Checks if external storage is available for read and write */
+        public boolean isStorageWritable() {
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                return true;
+            }
+            return false;
+        }
+
+        /* Checks if external storage is available to at least read */
+        public boolean isStorageReadable() {
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state) ||
+                    Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+                return true;
+            }
+            return false;
+        }
+
         /**
          * @return /storage/emulated/0/Android/data/包名/cache
          */
@@ -183,12 +211,13 @@ public class Storage {
             return mContext.getExternalCacheDir();
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         public File[] getCacheDirs() {
-            return mContext.getExternalCacheDirs();
+            return ContextCompat.getExternalCacheDirs(mContext);
         }
 
         /**
+         * 保存应用私有文件
+         *
          * @param type The type of files directory to return. May be {@code null} for the root of
          *             the files directory or one of the following constants for a subdirectory:
          *             {@link android.os.Environment#DIRECTORY_MUSIC}, {@link
@@ -197,16 +226,39 @@ public class Storage {
          *             android.os.Environment#DIRECTORY_NOTIFICATIONS}, {@link
          *             android.os.Environment#DIRECTORY_PICTURES}, or {@link
          *             android.os.Environment#DIRECTORY_MOVIES}.
+         *
+         *             如果您不需要特定的媒体目录，请传递 null 以接收应用私有目录的根目录。
          * @return /storage/emulated/0/Android/data/包名/files/{type}
          */
         public File getFilesDir(String type) {
             return mContext.getExternalFilesDir(type);
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         public File[] getFilesDirs(String type) {
-            return mContext.getExternalFilesDirs(type);
+            return ContextCompat.getExternalFilesDirs(mContext, type);
         }
+
+        /**
+         * @return 保存可与其他应用共享的文件
+         */
+        public File getStoragePublicDirectory(String type) {
+            return Environment.getExternalStoragePublicDirectory(type);
+        }
+
+        /**
+         * @param type 目录类型
+         * @param name 目录名称
+         * @return 在公共目录中创建了一个指定名称的目录：
+         */
+        public File getStoragePublicDirWithName(String type, String name) {
+            // Get the directory for the user's public directory.
+            File file = new File(getStoragePublicDirectory(type), name);
+            if (!file.mkdirs()) {
+                Log.e(TAG, "Directory not created");
+            }
+            return file;
+        }
+
 
         /**
          * @return /storage/emulated/0
@@ -222,25 +274,34 @@ public class Storage {
     }
 
 
+    /**
+     * 清除缓存：
+     *
+     * 1. 将外部私有数据下的cache包（/storage/emulated/0/Android/data/包名/cache）清除，
+     *
+     * 2. 将内部数据下的cache包下的内容（/data/data/包名/cache/XXX）清除 。
+     */
+    public void clearCache() {
+        File mInternalCacheFile = mInternalStorage.getCacheDir();
+        if (!mInternalCacheFile.delete()) {
+            Log.e(TAG, "Internal Cache File Deleted Failed!!!");
+        }
+        File mExternalCacheFile = mExternalStorage.getCacheDir();
+        if (!mExternalCacheFile.delete()) {
+            Log.e(TAG, "External Cache File Deleted Failed!!!");
+        }
+    }
+//    清除数据：将外部私有数据包（/storage/emulated/0/Android/data/包名）清除，
+//             将内部数据下的所有内容（/data/data/包名/XXX）清除；
+
+    public void clearData() {
+        mInternalStorage.getDataDir();
+    }
+
     //======
 //其次介绍几个除了/data目录之外的目录
 // 1. /mnt :这个目录专门用来当作挂载点(MountPoint)。通俗点说,/mnt就是来挂载外部存储设备的(如sdcard),我们的sdcard将会被手机系统视作一个文件夹,这个文件夹将会被系统嵌入到收集系统的mnt目录
 // 2. /dev包：Linux系统的常规文件夹。
 // 3. /system包：系统配置的文件夹，比如Android系统框架（framework）、底层类库（lib）、字体（font）等。
 
-
-//当用应用管理来清除数据的时候:
-//    清除缓存：将外部私有数据下的cache包（/storage/emulated/0/Android/data/包名/cache）清除，
-//             将内部数据下的cache包下的内容（/data/data/包名/cache/XXX）清除 。
-
-    public void clearCache() {
-        mInternalStorage.getCacheDir();
-        mExternalStorage.getCacheDir();
-    }
-//    清楚数据：将外部私有数据包（/storage/emulated/0/Android/data/包名）清除，
-//             将内部数据下的所有内容（/data/data/包名/XXX）清除；
-
-    public void clearData() {
-        mInternalStorage.getDataDir();
-    }
 }

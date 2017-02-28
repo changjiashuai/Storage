@@ -35,8 +35,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void testExternalStorage() {
-        Log.i(TAG, "isExternalStorageEmulated: " + Environment.isExternalStorageEmulated());
-        Log.i(TAG, "isExternalStorageRemovable: " + Environment.isExternalStorageRemovable());
+        Log.i(TAG, "ExternalStorage Emulated: " + storage.getExternalStorage().isEmulated());
+        Log.i(TAG, "ExternalStorage Removable: " + storage.getExternalStorage().isRemovable());
         Log.i(TAG, "ExternalStorage path: " + storage.getExternalStorage().toString());
         Log.i(TAG, "External DIRECTORY_MUSIC: " + storage.getExternalStorage().getFilesDir(Environment.DIRECTORY_MUSIC));
         Log.i(TAG, "External getCacheDir: " + storage.getExternalStorage().getCacheDir());
