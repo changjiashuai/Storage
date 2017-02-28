@@ -73,19 +73,35 @@ public class Storage {
             return mContext.getDatabasePath(name);
         }
 
-        /* '/data/data/包名/files' */
+        /**
+         * 获取在其中存储内部文件的文件系统目录的绝对路径。
+         *
+         * @return /data/data/包名/files
+         */
         public File getFilesDir() {
             return mContext.getFilesDir();
         }
 
+        /**
+         * @return 返回您的应用当前保存的一系列文件
+         */
         public String[] getFileList() {
             return mContext.fileList();
         }
 
         /**
+         * @param name 文件名
+         * @return 删除保存在内部存储的文件。
+         */
+        public boolean deleteFile(String name) {
+            return mContext.deleteFile(name);
+        }
+
+        /**
          * @param name    文件名
          * @param content 文件内容
-         * @param mode    MODE_PRIVATE | MODE_APPEND
+         * @param mode    MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
+         *                MODE_WORLD_WRITEABLE 已被弃用
          */
         public void openFileOutput(String name, String content, int mode) throws IOException {
             FileOutputStream fos = mContext.openFileOutput(name, mode);
@@ -95,15 +111,20 @@ public class Storage {
 
         /**
          * @param name 文件名
-         * @param mode MODE_PRIVATE | MODE_APPEND
-         * @return file
+         * @param mode MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
+         *             MODE_WORLD_WRITEABLE 已被弃用
+         * @return 在您的内部存储空间内创建（或打开现有的）目录。
          * @see #openFileOutput(String, String, int)
          */
         public File getDir(String name, int mode) {
             return mContext.getDir(name, mode);
         }
 
-        /* '/data/data/包名/cache' < 1MB */
+        /**
+         * 将临时缓存文件保存到的内部目录。 使其占用的空间保持在合理的限制范围内（例如 1 MB）
+         *
+         * @return /data/data/包名/cache
+         */
         public File getCacheDir() {
             return mContext.getCacheDir();
         }
@@ -119,7 +140,6 @@ public class Storage {
 
         @Override
         public String toString() {
-            ///data/data/io.github.changjiashuai.storage
             return getDataDir().getPath();
         }
     }
