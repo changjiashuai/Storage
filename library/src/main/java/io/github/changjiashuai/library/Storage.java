@@ -1,7 +1,9 @@
 package io.github.changjiashuai.library;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
+import android.os.StatFs;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import static android.content.ContentValues.TAG;
+import static android.os.Environment.getExternalStorageState;
 
 /**
  * <a href="https://developer.android.com/guide/topics/data/data-storage.html">data-storage</a>
@@ -262,12 +265,12 @@ public class Storage {
         }
 
         public String getStorageState() {
-            return Environment.getExternalStorageState();
+            return getExternalStorageState();
         }
 
         /* Checks if external storage is available for read and write */
         public boolean isStorageWritable() {
-            String state = Environment.getExternalStorageState();
+            String state = getExternalStorageState();
             if (Environment.MEDIA_MOUNTED.equals(state)) {
                 return true;
             }
@@ -276,7 +279,7 @@ public class Storage {
 
         /* Checks if external storage is available to at least read */
         public boolean isStorageReadable() {
-            String state = Environment.getExternalStorageState();
+            String state = getExternalStorageState();
             if (Environment.MEDIA_MOUNTED.equals(state) ||
                     Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
                 return true;
@@ -344,7 +347,13 @@ public class Storage {
          * @return /storage/emulated/0
          */
         public File getDataDir() {
-            return Environment.getExternalStorageDirectory();
+            File file = getFilesDir(null);
+            if (file != null) {
+                String path = file.getPath();
+                String newPath = path.substring(0, path.lastIndexOf("/"));
+                file = new File(newPath);
+            }
+            return file;
         }
 
         @Override
@@ -357,31 +366,135 @@ public class Storage {
     /**
      * 清除缓存：
      *
-     * 1. 将外部私有数据下的cache包（/storage/emulated/0/Android/data/包名/cache）清除，
+     * 1. 将内部数据下的cache包下的内容（/data/data/包名/cache/XXX）清除 。
      *
-     * 2. 将内部数据下的cache包下的内容（/data/data/包名/cache/XXX）清除 。
+     * 2. 将外部私有数据下的cache包（/storage/emulated/0/Android/data/包名/cache）清除，
      */
     public void clearCache() {
         File mInternalCacheFile = mInternalStorage.getCacheDir();
         if (!mInternalCacheFile.delete()) {
-            Log.e(TAG, "Internal Cache File Deleted Failed!!!");
+            Log.e(TAG, "clearCache: Internal Cache File Deleted Failed!!!");
         }
         File mExternalCacheFile = mExternalStorage.getCacheDir();
         if (!mExternalCacheFile.delete()) {
-            Log.e(TAG, "External Cache File Deleted Failed!!!");
+            Log.e(TAG, "clearCache: External Cache File Deleted Failed!!!");
         }
     }
-//    清除数据：将外部私有数据包（/storage/emulated/0/Android/data/包名）清除，
-//             将内部数据下的所有内容（/data/data/包名/XXX）清除；
 
+    /**
+     * 清除数据：
+     *
+     * 1. 将内部数据下的所有内容（/data/data/包名/XXX）清除；
+     *
+     * 2. 将外部私有数据包（/storage/emulated/0/Android/data/包名）清除，
+     */
     public void clearData() {
-        mInternalStorage.getDataDir();
+        File mInternalDataFile = mInternalStorage.getDataDir();
+        if (!mInternalDataFile.delete()) {
+            Log.e(TAG, "clearData: Internal Data File Deleted Failed!!!");
+        }
+        File mExternalDataFile = mExternalStorage.getDataDir();
+        if (!mExternalDataFile.delete()) {
+            Log.e(TAG, "clearData: External Data File Deleted Failed!!!");
+        }
     }
 
-    //======
-//其次介绍几个除了/data目录之外的目录
-// 1. /mnt :这个目录专门用来当作挂载点(MountPoint)。通俗点说,/mnt就是来挂载外部存储设备的(如sdcard),我们的sdcard将会被手机系统视作一个文件夹,这个文件夹将会被系统嵌入到收集系统的mnt目录
-// 2. /dev包：Linux系统的常规文件夹。
-// 3. /system包：系统配置的文件夹，比如Android系统框架（framework）、底层类库（lib）、字体（font）等。
+    /**
+     * 获取手机内部剩余存储空间
+     */
+    public long getRemainInternalStorageSize() {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize = stat.getBlockSizeLong();
+        } else {
+            blockSize = stat.getBlockSize();
+        }
+        long availableBlocks = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            availableBlocks = stat.getAvailableBlocksLong();
+        } else {
+            availableBlocks = stat.getAvailableBlocks();
+        }
+        return availableBlocks * blockSize;
+    }
 
+    /**
+     * 获取手机内部剩余虚拟外部存储空间
+     */
+    public long getRemainExternalStorageSize() {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            File path = Environment.getExternalStorageDirectory();
+            StatFs stat = new StatFs(path.getPath());
+            long blockSize = 0;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                blockSize = stat.getBlockSizeLong();
+            } else {
+                blockSize = stat.getBlockSize();
+            }
+            long availableBlocks = 0;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                availableBlocks = stat.getAvailableBlocksLong();
+            } else {
+                availableBlocks = stat.getAvailableBlocks();
+            }
+            return availableBlocks * blockSize;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * 获取手机内部总的存储空间
+     */
+    public long getTotalInternalStorageSize() {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize = stat.getBlockSizeLong();
+        } else {
+            blockSize = stat.getBlockSize();
+        }
+        long totalBlocks = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            totalBlocks = stat.getBlockCountLong();
+        } else {
+            totalBlocks = stat.getBlockCount();
+        }
+        return totalBlocks * blockSize;
+    }
+
+    /**
+     * 获取手机内部总的虚拟外部存储空间
+     */
+    public long getTotalExternalStorageSize() {
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            File path = Environment.getExternalStorageDirectory();
+            StatFs stat = new StatFs(path.getPath());
+            long blockSize = 0;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                blockSize = stat.getBlockSizeLong();
+            } else {
+                blockSize = stat.getBlockSize();
+            }
+            long totalBlocks = 0;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                totalBlocks = stat.getBlockCountLong();
+            } else {
+                totalBlocks = stat.getBlockCount();
+            }
+            return totalBlocks * blockSize;
+        } else {
+            return -1;
+        }
+    }
+
+    //=============其次介绍几个除了/data目录之外的目录===============
+    // 1. /mnt :这个目录专门用来当作挂载点(MountPoint)。通俗点说,/mnt就是来挂载外部存储设备的(如sdcard),
+    // 我们的sdcard将会被手机系统视作一个文件夹,这个文件夹将会被系统嵌入到收集系统的mnt目录
+    // 2. /dev包：Linux系统的常规文件夹。
+    // 3. /system包：系统配置的文件夹，比如Android系统框架（framework）、底层类库（lib）、字体（font）等。
+    
 }
