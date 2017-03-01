@@ -1,6 +1,6 @@
 # Storage
 
->Android存储方式以及路径API
+>提供Android`内部存储`和`外部存储`的API
 
 
 ### InternalStorage
