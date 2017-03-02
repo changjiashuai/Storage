@@ -7,14 +7,11 @@
 > Add the jcenter repository information in your build.gradle file like this
 
 ```
-repositories {
-  jcenter()
-}
-
 
 dependencies {
-compile 'io.github.changjiashuai:Storage:1.0.0'
+	compile 'io.github.changjiashuai:storage:1.0.0'
 }
+
 ```
 
 ### InternalStorage
