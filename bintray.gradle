@@ -61,8 +61,8 @@ install {
 
 // This generates sources.jar
 task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
 }
 
 //This generates javadocJar.jar
@@ -84,9 +84,40 @@ task copyDoc(type: Copy) {
     into "docs"
 }
 
+//task androidJavadoc(type: Javadoc) {
+//    failOnError = false
+//    source = android.sourceSets.main.java.srcDirs
+//    ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+//    classpath += files(ext.androidJar)
+//}
+//
+//task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
+//    classifier = 'javadoc'
+//    from androidJavadoc.destinationDir
+//}
+//
+//task androidSourcesJar(type: Jar) {
+//    classifier = 'sources'
+//    from android.sourceSets.main.java.srcDirs
+//}
+//
+//task makeJar(type: Copy) {
+//    from('build/intermediates/bundles/release/')
+//    into('build/libs/')
+//    include('classes.jar')
+//    rename('classes.jar', projectName + '-' + projectVersionName + '.jar')
+//}
+
+//task makeAar(type: Copy){
+//    from('build/intermediates/bundles/release/')
+//    into('build/outputs/aar')
+//    include('classes.jar')
+//    rename('classes.jar', projectName + '-' + projectVersionName + '.aar')
+//}
+
 //上传到JCenter所需要的源码文件
 artifacts {
-    archives javadocJar
+//    archives javadocJar
     archives sourcesJar
 }
 

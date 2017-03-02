@@ -2,6 +2,20 @@
 
 >提供Android`内部存储`和`外部存储`的API
 
+### Adding to your project
+
+> Add the jcenter repository information in your build.gradle file like this
+
+```
+repositories {
+  jcenter()
+}
+
+
+dependencies {
+compile 'io.github.changjiashuai:Storage:1.0.0'
+}
+```
 
 ### InternalStorage
 
