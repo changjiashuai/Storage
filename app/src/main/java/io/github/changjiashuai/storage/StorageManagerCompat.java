@@ -146,7 +146,7 @@ public class StorageManagerCompat {
             File pathFile = Reflect.on(storageVolume).call("getPathFile").get();
             files.add(pathFile);
         }
-        return (File[]) files.toArray();
+        return files.toArray(new File[files.size()]);
     }
 
     /**
@@ -177,7 +177,7 @@ public class StorageManagerCompat {
             boolean isRemovable = Reflect.on(storageVolume).call("isRemovable").get();
             files.add(new File(path));
         }
-        return (File[]) files.toArray();
+        return files.toArray(new File[files.size()]);
     }
 
     /**

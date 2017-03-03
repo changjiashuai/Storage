@@ -1,9 +1,11 @@
 package io.github.changjiashuai.storage;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_test).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                launchAppDetail("com.insta360.explore", null);
+                navigateToMarket("com.insta360.explore", null);
             }
         });
     }
@@ -41,24 +43,22 @@ public class MainActivity extends AppCompatActivity {
      * 启动到应用商店app详情界面
      *
      * @param appPkg    目标App的包名
-     * @param marketPkg 应用商店包名 ,如果为""则由系统弹出应用商店列表供用户选择,否则调转到目标市场的应用详情界面，某些应用商店可能会失败
+     * @param marketPkg 应用商店包名 if null 则由系统弹出应用商店列表供用户选择,否则调转到目标市场的应用详情界面，某些应用商店可能会失败
      */
-    public void launchAppDetail(String appPkg, String marketPkg) {
+    public void navigateToMarket(@NonNull String appPkg, String marketPkg) {
         try {
-            if (TextUtils.isEmpty(appPkg)) return;
-
-//            Uri uri = Uri.parse("market://details?id=" + appPkg);
-            Uri uri = Uri.parse("http://play.google.com/store/apps/details?id=" + appPkg);
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            Uri uri = Uri.parse("market://details?id=" + appPkg);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
             if (!TextUtils.isEmpty(marketPkg)) {
                 intent.setPackage(marketPkg);
             }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, "navigateToMarket: no market app installed", e);
         }
     }
+
 
     private void testInternalStorage() {
         Log.i(TAG, "InternalStorage path: " + storage.getInternalStorage());
@@ -96,9 +96,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "paths: " + file);
                 mTvMsg.append("extSdcardPath:" + file);
                 mTvMsg.append("\n");
-                if (i==1){
-                    for (File f: file.listFiles()){
-                        Log.i(TAG, "80F2-FB73: " + f.getName());
+                if (i == 1) {
+                    if (file.listFiles() != null) {
+                        for (File f : file.listFiles()) {
+                            Log.i(TAG, "80F2-FB73: " + f.getName());
+                        }
                     }
                 }
             }
