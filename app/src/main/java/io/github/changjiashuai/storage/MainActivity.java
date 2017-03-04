@@ -73,22 +73,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void testExternalStorage() {
-        Log.i(TAG, "ExternalStorage Emulated: " + storage.getExternalStorage().isEmulated());
-        Log.i(TAG, "ExternalStorage Removable: " + storage.getExternalStorage().isRemovable());
-        Log.i(TAG, "ExternalStorage path: " + storage.getExternalStorage().toString());
-        Log.i(TAG, "External getFilesDir: " + storage.getExternalStorage().getFilesDir(null));
-        File[] files = storage.getExternalStorage().getFilesDirs(null);
-        for (File file : files) {
-            Log.i(TAG, "External getFilesDir: " + file);
-        }
-        Log.i(TAG, "External getStoragePublicDirectory: " + storage.getExternalStorage().getStoragePublicDirectory(Environment.DIRECTORY_MUSIC));
+        Log.i(TAG, "External getDataPkgDir: " + storage.getExternalStorage().getDataPkgDir());
+        Log.i(TAG, "External getDataPkgDirPath: " + storage.getExternalStorage().getDataPkgDirPath());
+        Log.i(TAG, "External getDataPkgDirWithName: " + storage.getExternalStorage().getDataPkgDirWithName("hahaha"));
+
+        Log.i(TAG, "testExternalStorage: --------getStoragePublicDir------------");
+
+        Log.i(TAG, "External getStoragePublicDir: " + storage.getExternalStorage()
+                .getStoragePublicDir(Environment.DIRECTORY_MUSIC));
+        Log.i(TAG, "External getStoragePublicDirPath: " + storage.getExternalStorage()
+                .getStoragePublicDirPath(Environment.DIRECTORY_MUSIC));
+        Log.i(TAG, "External getStoragePublicDirWithName: " + storage.getExternalStorage()
+                .getStoragePublicDirWithName(Environment.DIRECTORY_MUSIC, "re"));
+
+        Log.i(TAG, "testExternalStorage: ---------getFilesDir------------------");
+        Log.i(TAG, "External getFilesDir: " + storage.getExternalStorage().getFilesDir(Environment.DIRECTORY_DOWNLOADS));
+        Log.i(TAG, "External getFilesDirPath: " + storage.getExternalStorage().getFilesDirPath(Environment.DIRECTORY_DOWNLOADS));
+        Log.i(TAG, "External getFilesDirWithName: " + storage.getExternalStorage()
+                .getFilesDirWithName(Environment.DIRECTORY_DOWNLOADS, "test"));
+
+        Log.i(TAG, "testExternalStorage: ---------getCacheDir------------------");
         Log.i(TAG, "External getCacheDir: " + storage.getExternalStorage().getCacheDir());
-        Log.i(TAG, "External getDataDir: " + storage.getExternalStorage().getDataDir());
+        Log.i(TAG, "External getCacheDirPath: " + storage.getExternalStorage().getCacheDirPath());
+        Log.i(TAG, "External getCacheDirWithName: " + storage.getExternalStorage()
+                .getCacheDirWithName("test"));
 
 
-//        MySDCard mySDCard = new MySDCard(this);
+    }
+
+    private void testPaths(){
         File[] paths = StorageManagerCompat.getExternalStoragePaths(getApplicationContext());
-//        File[] paths = getUsbPath();
         int length = paths.length;
         if (length > 0) {
             for (int i = 0; i < length; i++) {

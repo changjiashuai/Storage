@@ -294,6 +294,30 @@ public class Storage {
             return mContext.getExternalCacheDir();
         }
 
+        public File getCacheDirWithName(String name) {
+            File file = getCacheDir();
+            if (file != null) {
+                File newFile = new File(file, name);
+                if (!newFile.exists()) {
+                    if (!newFile.mkdirs()) {
+                        Log.e(TAG, "getCacheDirWithName:  Directory not created");
+                        return null;
+                    }
+                }
+                return newFile;
+            }
+            return null;
+        }
+
+        public String getCacheDirPath() {
+            File file = getCacheDir();
+            if (file != null) {
+                return file.getPath();
+            } else {
+                return null;
+            }
+        }
+
         public File[] getCacheDirs() {
             return ContextCompat.getExternalCacheDirs(mContext);
         }
@@ -317,6 +341,30 @@ public class Storage {
             return mContext.getExternalFilesDir(type);
         }
 
+        public File getFilesDirWithName(String type, String name) {
+            File file = getFilesDir(type);
+            if (file != null) {
+                File newFile = new File(file, name);
+                if (!newFile.exists()) {
+                    if (!newFile.mkdirs()) {
+                        Log.e(TAG, "getFilesDirWithName:  Directory not created");
+                        return null;
+                    }
+                }
+                return newFile;
+            }
+            return null;
+        }
+
+        public String getFilesDirPath(String type) {
+            File file = getFilesDir(type);
+            if (file != null) {
+                return file.getPath();
+            } else {
+                return null;
+            }
+        }
+
         public File[] getFilesDirs(String type) {
             return ContextCompat.getExternalFilesDirs(mContext, type);
         }
@@ -324,7 +372,12 @@ public class Storage {
         /**
          * @return 保存可与其他应用共享的文件
          */
+        @Deprecated
         public File getStoragePublicDirectory(String type) {
+            return Environment.getExternalStoragePublicDirectory(type);
+        }
+
+        public File getStoragePublicDir(String type) {
             return Environment.getExternalStoragePublicDirectory(type);
         }
 
@@ -333,19 +386,33 @@ public class Storage {
          * @param name 目录名称
          * @return 在公共目录中创建了一个指定名称的目录：
          */
+        // TODO: 2017/3/4 需要测试手机支持程度 
         public File getStoragePublicDirWithName(String type, String name) {
             // Get the directory for the user's public directory.
-            File file = new File(getStoragePublicDirectory(type), name);
-            if (!file.mkdirs()) {
-                Log.e(TAG, "Directory not created");
+            File file = new File(getStoragePublicDir(type), name);
+            Log.i(TAG, "getStoragePublicDirWithName: " + file);
+            if (!file.exists()) {
+                if (!file.mkdirs()) {
+                    Log.e(TAG, "getStoragePublicDirWithName Directory not created");
+                    return null;
+                }
             }
             return file;
         }
 
+        public String getStoragePublicDirPath(String type) {
+            File file = getStoragePublicDir(type);
+            if (file != null) {
+                return file.getPath();
+            }
+            return null;
+        }
 
         /**
-         * @return /storage/emulated/0
+         * @return /storage/emulated/0/Android/data/包名
+         * @see #getDataPkgDir() use it to replace
          */
+        @Deprecated
         public File getDataDir() {
             File file = getFilesDir(null);
             if (file != null) {
@@ -356,9 +423,46 @@ public class Storage {
             return file;
         }
 
+        /**
+         * @return /storage/emulated/0/Android/data/包名
+         * @return
+         */
+        public File getDataPkgDir(){
+            File file = getFilesDir(null);
+            if (file != null) {
+                String path = file.getPath();
+                String newPath = path.substring(0, path.lastIndexOf("/"));
+                file = new File(newPath);
+            }
+            return file;
+        }
+
+        public File getDataPkgDirWithName(String name) {
+            File file = getDataPkgDir();
+            if (file != null) {
+                File newFile = new File(file, name);
+                if (!newFile.exists()) {
+                    if (!file.mkdirs()) {
+                        Log.e(TAG, "getDataPkgDirWithName Directory not created");
+                        return null;
+                    }
+                }
+                return newFile;
+            }
+            return null;
+        }
+
+        public String getDataPkgDirPath() {
+            File file = getDataPkgDir();
+            if (file != null) {
+                return file.getPath();
+            }
+            return null;
+        }
+
         @Override
         public String toString() {
-            return getDataDir().getPath();
+            return getDataPkgDirPath();
         }
     }
 
@@ -496,5 +600,5 @@ public class Storage {
     // 我们的sdcard将会被手机系统视作一个文件夹,这个文件夹将会被系统嵌入到收集系统的mnt目录
     // 2. /dev包：Linux系统的常规文件夹。
     // 3. /system包：系统配置的文件夹，比如Android系统框架（framework）、底层类库（lib）、字体（font）等。
-    
+
 }
