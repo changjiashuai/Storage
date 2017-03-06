@@ -84,7 +84,7 @@ dependencies {
     */
     public static boolean isRemovable();
 
-    public String getStorageState();
+    public static String getStorageState();
 
     /* 检测虚拟外部存储是否可读可写*/
     public static boolean isStorageWritable();
