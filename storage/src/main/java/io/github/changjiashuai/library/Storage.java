@@ -26,22 +26,6 @@ import static android.os.Environment.getExternalStorageState;
 
 public class Storage {
 
-    private InternalStorage mInternalStorage;
-    private ExternalStorage mExternalStorage;
-
-    public Storage(Context context) {
-        mInternalStorage = new InternalStorage(context);
-        mExternalStorage = new ExternalStorage(context);
-    }
-
-    public InternalStorage getInternalStorage() {
-        return mInternalStorage;
-    }
-
-    public ExternalStorage getExternalStorage() {
-        return mExternalStorage;
-    }
-
     /**
      * 内部存储
      *
@@ -63,36 +47,30 @@ public class Storage {
      *
      * <li>/4.data/data/包名/cache 存放的是APP的缓存信息
      */
-    public class InternalStorage {
-
-        private Context mContext;
-
-        private InternalStorage(Context context) {
-            mContext = context;
-        }
+    public static class InternalStorage {
 
         /**
          * 获取在其中存储内部文件的文件系统目录的绝对路径。
          *
          * @return /data/data/包名/files
          */
-        public File getFilesDir() {
-            return mContext.getFilesDir();
+        public static File getFilesDir(Context context) {
+            return context.getFilesDir();
         }
 
         /**
          * @return 返回您的应用当前保存的一系列文件
          */
-        public String[] getFileList() {
-            return mContext.fileList();
+        public static String[] getFileList(Context context) {
+            return context.fileList();
         }
 
         /**
          * @param name 文件名
          * @return 删除保存在内部存储的文件。
          */
-        public boolean deleteFile(String name) {
-            return mContext.deleteFile(name);
+        public static boolean deleteFile(Context context, String name) {
+            return context.deleteFile(name);
         }
 
         /**
@@ -103,10 +81,10 @@ public class Storage {
          * @param mode    MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
          *                MODE_WORLD_WRITEABLE 已被弃用
          */
-        public void writeFileData(String name, String content, int mode) {
+        public static void writeFileData(Context context, String name, String content, int mode) {
             FileOutputStream fos = null;
             try {
-                fos = mContext.openFileOutput(name, mode);
+                fos = context.openFileOutput(name, mode);
                 fos.write(content.getBytes());
             } catch (IOException e) {
                 try {
@@ -131,11 +109,11 @@ public class Storage {
         /**
          * 打开指定文件，读取其数据，返回字符串对象
          */
-        public String readFileData(String fileName) {
+        public static String readFileData(Context context, String fileName) {
             String result = "";
             FileInputStream fis = null;
             try {
-                fis = mContext.openFileInput(fileName);
+                fis = context.openFileInput(fileName);
                 //获取文件长度
                 int length = fis.available();
                 byte[] buffer = new byte[length];
@@ -164,14 +142,14 @@ public class Storage {
             return result;
         }
 
-        private String getString(final byte[] data, final String charset) {
+        private static String getString(final byte[] data, final String charset) {
             if (data == null) {
                 throw new IllegalArgumentException("Parameter may not be null");
             }
             return getString(data, 0, data.length, charset);
         }
 
-        private String getString(final byte[] data, int offset, int length, String charset) {
+        private static String getString(final byte[] data, int offset, int length, String charset) {
             if (data == null) {
                 throw new IllegalArgumentException("Parameter may not be null");
             }
@@ -190,10 +168,10 @@ public class Storage {
          * @param mode MODE_PRIVATE | MODE_APPEND 自 API 级别 17 以来，常量 MODE_WORLD_READABLE 和
          *             MODE_WORLD_WRITEABLE 已被弃用
          * @return 在您的内部存储空间内创建（或打开现有的）目录。
-         * @see #writeFileData(String, String, int)
+         * @see #writeFileData(Context, String, String, int)
          */
-        public File getDir(String name, int mode) {
-            return mContext.getDir(name, mode);
+        public static File getDir(Context context, String name, int mode) {
+            return context.getDir(name, mode);
         }
 
         /**
@@ -201,8 +179,8 @@ public class Storage {
          *
          * @return /data/data/包名/cache
          */
-        public File getCacheDir() {
-            return mContext.getCacheDir();
+        public static File getCacheDir(Context context) {
+            return context.getCacheDir();
         }
 
         /**
@@ -210,14 +188,10 @@ public class Storage {
          *
          * @return /data/{dir}/包名
          */
-        public File getDataDir() {
-            return ContextCompat.getDataDir(mContext);
+        public static File getDataDir(Context context) {
+            return ContextCompat.getDataDir(context);
         }
 
-        @Override
-        public String toString() {
-            return getDataDir().getPath();
-        }
     }
 
 
@@ -241,35 +215,30 @@ public class Storage {
      *
      * <li>从Android 4.4开始，应用可以管理在它外部存储上的特定包名目录，而不用获取WRITE_EXTERNAL_STORAGE权限。</li>
      */
-    public class ExternalStorage {
+    public static class ExternalStorage {
 
         private static final String TAG = "ExternalStorage";
-        private Context mContext;
-
-        private ExternalStorage(Context context) {
-            mContext = context;
-        }
 
         /**
          * 判断外部设置是否有效
          */
-        public boolean isEmulated() {
+        public static boolean isEmulated() {
             return Environment.isExternalStorageEmulated();
         }
 
         /**
          * 判断外部设置是否可以移除
          */
-        public boolean isRemovable() {
+        public static boolean isRemovable() {
             return Environment.isExternalStorageEmulated();
         }
 
-        public String getStorageState() {
+        public static String getStorageState() {
             return getExternalStorageState();
         }
 
         /* Checks if external storage is available for read and write */
-        public boolean isStorageWritable() {
+        public static boolean isStorageWritable() {
             String state = getExternalStorageState();
             if (Environment.MEDIA_MOUNTED.equals(state)) {
                 return true;
@@ -278,7 +247,7 @@ public class Storage {
         }
 
         /* Checks if external storage is available to at least read */
-        public boolean isStorageReadable() {
+        public static boolean isStorageReadable() {
             String state = getExternalStorageState();
             if (Environment.MEDIA_MOUNTED.equals(state) ||
                     Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
@@ -290,12 +259,12 @@ public class Storage {
         /**
          * @return /storage/emulated/0/Android/data/包名/cache
          */
-        public File getCacheDir() {
-            return mContext.getExternalCacheDir();
+        public static File getCacheDir(Context context) {
+            return context.getExternalCacheDir();
         }
 
-        public File getCacheDirWithName(String name) {
-            File file = getCacheDir();
+        public static File createDirInCacheDir(Context context, String name) {
+            File file = getCacheDir(context);
             if (file != null) {
                 File newFile = new File(file, name);
                 if (!newFile.exists()) {
@@ -309,8 +278,8 @@ public class Storage {
             return null;
         }
 
-        public String getCacheDirPath() {
-            File file = getCacheDir();
+        public static String getCacheDirPath(Context context) {
+            File file = getCacheDir(context);
             if (file != null) {
                 return file.getPath();
             } else {
@@ -318,8 +287,8 @@ public class Storage {
             }
         }
 
-        public File[] getCacheDirs() {
-            return ContextCompat.getExternalCacheDirs(mContext);
+        public static File[] getCacheDirs(Context context) {
+            return ContextCompat.getExternalCacheDirs(context);
         }
 
         /**
@@ -337,12 +306,12 @@ public class Storage {
          *             如果您不需要特定的媒体目录，请传递 null 以接收应用私有目录的根目录。
          * @return /storage/emulated/0/Android/data/包名/files/{type}
          */
-        public File getFilesDir(String type) {
-            return mContext.getExternalFilesDir(type);
+        public static File getFilesDir(Context context, String type) {
+            return context.getExternalFilesDir(type);
         }
 
-        public File getFilesDirWithName(String type, String name) {
-            File file = getFilesDir(type);
+        public static File createDirInFilesDir(Context context, String type, String name) {
+            File file = getFilesDir(context, type);
             if (file != null) {
                 File newFile = new File(file, name);
                 if (!newFile.exists()) {
@@ -356,8 +325,8 @@ public class Storage {
             return null;
         }
 
-        public String getFilesDirPath(String type) {
-            File file = getFilesDir(type);
+        public static String getFilesDirPath(Context context, String type) {
+            File file = getFilesDir(context, type);
             if (file != null) {
                 return file.getPath();
             } else {
@@ -365,32 +334,33 @@ public class Storage {
             }
         }
 
-        public File[] getFilesDirs(String type) {
-            return ContextCompat.getExternalFilesDirs(mContext, type);
+        public static File[] getFilesDirs(Context context, String type) {
+            return ContextCompat.getExternalFilesDirs(context, type);
         }
 
         /**
          * @return 保存可与其他应用共享的文件
          */
         @Deprecated
-        public File getStoragePublicDirectory(String type) {
+        public static File getStoragePublicDirectory(String type) {
             return Environment.getExternalStoragePublicDirectory(type);
         }
 
-        public File getStoragePublicDir(String type) {
+        public static File getStoragePublicDir(String type) {
             return Environment.getExternalStoragePublicDirectory(type);
         }
 
         /**
+         * Writing to this path requires the
+         * {@link android.Manifest.permission#WRITE_EXTERNAL_STORAGE} permission
+         *
          * @param type 目录类型
          * @param name 目录名称
          * @return 在公共目录中创建了一个指定名称的目录：
          */
-        // TODO: 2017/3/4 需要测试手机支持程度 
-        public File getStoragePublicDirWithName(String type, String name) {
+        public static File createDirInStoragePublicDir(String type, String name) {
             // Get the directory for the user's public directory.
             File file = new File(getStoragePublicDir(type), name);
-            Log.i(TAG, "getStoragePublicDirWithName: " + file);
             if (!file.exists()) {
                 if (!file.mkdirs()) {
                     Log.e(TAG, "getStoragePublicDirWithName Directory not created");
@@ -400,7 +370,7 @@ public class Storage {
             return file;
         }
 
-        public String getStoragePublicDirPath(String type) {
+        public static String getStoragePublicDirPath(String type) {
             File file = getStoragePublicDir(type);
             if (file != null) {
                 return file.getPath();
@@ -410,11 +380,9 @@ public class Storage {
 
         /**
          * @return /storage/emulated/0/Android/data/包名
-         * @see #getDataPkgDir() use it to replace
          */
-        @Deprecated
-        public File getDataDir() {
-            File file = getFilesDir(null);
+        public static File getDataPkgDir(Context context) {
+            File file = getFilesDir(context, null);
             if (file != null) {
                 String path = file.getPath();
                 String newPath = path.substring(0, path.lastIndexOf("/"));
@@ -424,26 +392,16 @@ public class Storage {
         }
 
         /**
-         * @return /storage/emulated/0/Android/data/包名
-         * @return
+         * @param name 文件名
+         * @return /storage/emulated/0/Android/data/io.github.changjiashuai.storage/{name}
          */
-        public File getDataPkgDir(){
-            File file = getFilesDir(null);
-            if (file != null) {
-                String path = file.getPath();
-                String newPath = path.substring(0, path.lastIndexOf("/"));
-                file = new File(newPath);
-            }
-            return file;
-        }
-
-        public File getDataPkgDirWithName(String name) {
-            File file = getDataPkgDir();
+        public static File createDirInDataPkgDir(Context context, String name) {
+            File file = getDataPkgDir(context);
             if (file != null) {
                 File newFile = new File(file, name);
                 if (!newFile.exists()) {
-                    if (!file.mkdirs()) {
-                        Log.e(TAG, "getDataPkgDirWithName Directory not created");
+                    if (!newFile.mkdirs()) {
+                        Log.e(TAG, "createDirInDataPkgDir Directory not created");
                         return null;
                     }
                 }
@@ -452,18 +410,43 @@ public class Storage {
             return null;
         }
 
-        public String getDataPkgDirPath() {
-            File file = getDataPkgDir();
+        public static String getDataPkgDirPath(Context context) {
+            File file = getDataPkgDir(context);
             if (file != null) {
                 return file.getPath();
             }
             return null;
         }
+    }
 
-        @Override
-        public String toString() {
-            return getDataPkgDirPath();
+
+    /**
+     * 获取目录文件大小
+     */
+    public static long getDirSize(File dir) {
+        if (dir == null) {
+            return 0;
         }
+        if (!dir.isDirectory()) {
+            return 0;
+        }
+        long dirSize = 0;
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isFile()) {
+                dirSize += file.length();
+            } else if (file.isDirectory()) {
+                dirSize += file.length();
+                dirSize += getDirSize(file); // 递归调用继续统计
+            }
+        }
+        return dirSize;
+    }
+
+    public static long getCacheSize(Context context) {
+        long internalCacheSize = getDirSize(InternalStorage.getCacheDir(context));
+        long externalCacheSize = getDirSize(ExternalStorage.getCacheDir(context));
+        return internalCacheSize + externalCacheSize;
     }
 
 
@@ -474,15 +457,17 @@ public class Storage {
      *
      * 2. 将外部私有数据下的cache包（/storage/emulated/0/Android/data/包名/cache）清除，
      */
-    public void clearCache() {
-        File mInternalCacheFile = mInternalStorage.getCacheDir();
-        if (!mInternalCacheFile.delete()) {
-            Log.e(TAG, "clearCache: Internal Cache File Deleted Failed!!!");
-        }
-        File mExternalCacheFile = mExternalStorage.getCacheDir();
-        if (!mExternalCacheFile.delete()) {
-            Log.e(TAG, "clearCache: External Cache File Deleted Failed!!!");
-        }
+    public static void clearCache(Context context) {
+        File mInternalCacheFile = InternalStorage.getCacheDir(context);
+        deleteFolderFile(mInternalCacheFile, true);
+        File mExternalCacheFile = ExternalStorage.getCacheDir(context);
+        deleteFolderFile(mExternalCacheFile, true);
+    }
+
+    public static long getDataSize(Context context) {
+        long internalDataSize = getDirSize(InternalStorage.getDataDir(context));
+        long externalDataSize = getDirSize(ExternalStorage.getDataPkgDir(context));
+        return internalDataSize + externalDataSize;
     }
 
     /**
@@ -492,21 +477,43 @@ public class Storage {
      *
      * 2. 将外部私有数据包（/storage/emulated/0/Android/data/包名）清除，
      */
-    public void clearData() {
-        File mInternalDataFile = mInternalStorage.getDataDir();
-        if (!mInternalDataFile.delete()) {
-            Log.e(TAG, "clearData: Internal Data File Deleted Failed!!!");
-        }
-        File mExternalDataFile = mExternalStorage.getDataDir();
-        if (!mExternalDataFile.delete()) {
-            Log.e(TAG, "clearData: External Data File Deleted Failed!!!");
+    public static void clearData(Context context) {
+        File mInternalDataFile = InternalStorage.getDataDir(context);
+        deleteFolderFile(mInternalDataFile, true);
+        File mExternalDataFile = ExternalStorage.getDataPkgDir(context);
+        deleteFolderFile(mExternalDataFile, true);
+    }
+
+    /**
+     * 删除指定目录下文件及目录
+     */
+    public static void deleteFolderFile(File dir, boolean deleteThisPath) {
+        try {
+            if (dir.isDirectory()) {// 如果下面还有文件
+                File files[] = dir.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    deleteFolderFile(files[i], true);
+                }
+            }
+            if (deleteThisPath) {
+                if (!dir.isDirectory()) {// 如果是文件，删除
+                    dir.delete();
+                } else {// 目录
+                    if (dir.listFiles().length == 0) {// 目录下没有文件或者目录，删除
+                        dir.delete();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "deleteFolderFile: ", e);
+            e.printStackTrace();
         }
     }
 
     /**
      * 获取手机内部剩余存储空间
      */
-    public long getRemainInternalStorageSize() {
+    public static long getRemainInternalStorageSize() {
         File path = Environment.getDataDirectory();
         StatFs stat = new StatFs(path.getPath());
         long blockSize = 0;
@@ -527,7 +534,7 @@ public class Storage {
     /**
      * 获取手机内部剩余虚拟外部存储空间
      */
-    public long getRemainExternalStorageSize() {
+    public static long getRemainExternalStorageSize() {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             File path = Environment.getExternalStorageDirectory();
             StatFs stat = new StatFs(path.getPath());
@@ -552,7 +559,7 @@ public class Storage {
     /**
      * 获取手机内部总的存储空间
      */
-    public long getTotalInternalStorageSize() {
+    public static long getTotalInternalStorageSize() {
         File path = Environment.getDataDirectory();
         StatFs stat = new StatFs(path.getPath());
         long blockSize = 0;
@@ -573,7 +580,7 @@ public class Storage {
     /**
      * 获取手机内部总的虚拟外部存储空间
      */
-    public long getTotalExternalStorageSize() {
+    public static long getTotalExternalStorageSize() {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             File path = Environment.getExternalStorageDirectory();
             StatFs stat = new StatFs(path.getPath());

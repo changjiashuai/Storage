@@ -1,5 +1,6 @@
 package io.github.changjiashuai.storage;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,18 +9,26 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.util.List;
 
 import io.github.changjiashuai.library.Storage;
+import io.github.changjiashuai.library.Storage.ExternalStorage;
+import io.github.changjiashuai.library.Storage.InternalStorage;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.AppSettingsDialog;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     private static final String TAG = "MainActivity";
-    private Storage storage;
+    public static final int RC_EXTERNAL = 0;
     private TextView mTvMsg;
 
     @Override
@@ -27,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTvMsg = (TextView) findViewById(R.id.tv_msg);
-        storage = new Storage(this);
 //        testInternalStorage();
 //        Log.i(TAG, "---------------------------------");
         testExternalStorage();
@@ -61,47 +69,75 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void testInternalStorage() {
-        Log.i(TAG, "InternalStorage path: " + storage.getInternalStorage());
-        Log.i(TAG, "Internal getFilesDir: " + storage.getInternalStorage().getFilesDir());
-        String[] files = storage.getInternalStorage().getFileList();
+        Log.i(TAG, "Internal getFilesDir: " + InternalStorage.getFilesDir(this));
+        String[] files = InternalStorage.getFileList(this);
         Log.i(TAG, "getFileList: length=" + files.length);
         for (int i = 0; i < files.length; i++) {
             Log.i(TAG, "getFileList: " + files[i]);
         }
-        Log.i(TAG, "Internal getCacheDir: " + storage.getInternalStorage().getCacheDir());
-        Log.i(TAG, "Internal getDataDir: " + storage.getInternalStorage().getDataDir());
+        Log.i(TAG, "Internal getCacheDir: " + InternalStorage.getCacheDir(this));
+        Log.i(TAG, "Internal getDataDir: " + InternalStorage.getDataDir(this));
     }
 
+    @AfterPermissionGranted(RC_EXTERNAL)
     private void testExternalStorage() {
-        Log.i(TAG, "External getDataPkgDir: " + storage.getExternalStorage().getDataPkgDir());
-        Log.i(TAG, "External getDataPkgDirPath: " + storage.getExternalStorage().getDataPkgDirPath());
-        Log.i(TAG, "External getDataPkgDirWithName: " + storage.getExternalStorage().getDataPkgDirWithName("hahaha"));
+        String[] perms = {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        if (EasyPermissions.hasPermissions(this, perms)) {
+            // Already have permission, do the thing
 
-        Log.i(TAG, "testExternalStorage: --------getStoragePublicDir------------");
+            Log.i(TAG, "getTotalExternalStorageSize: " + Formatter.formatFileSize(this,
+                    Storage.getTotalExternalStorageSize()));
+            Log.i(TAG, "getRemainExternalStorageSize: " + Formatter.formatFileSize(this,
+                    Storage.getRemainExternalStorageSize()));
+            Log.i(TAG, "getTotalInternalStorageSize: " + Formatter.formatFileSize(this,
+                    Storage.getTotalInternalStorageSize()));
+            Log.i(TAG, "getRemainInternalStorageSize: " + Formatter.formatFileSize(this,
+                    Storage.getRemainInternalStorageSize()));
 
-        Log.i(TAG, "External getStoragePublicDir: " + storage.getExternalStorage()
-                .getStoragePublicDir(Environment.DIRECTORY_MUSIC));
-        Log.i(TAG, "External getStoragePublicDirPath: " + storage.getExternalStorage()
-                .getStoragePublicDirPath(Environment.DIRECTORY_MUSIC));
-        Log.i(TAG, "External getStoragePublicDirWithName: " + storage.getExternalStorage()
-                .getStoragePublicDirWithName(Environment.DIRECTORY_MUSIC, "re"));
+            Log.i(TAG, "testExternalStorage: -------------");
 
-        Log.i(TAG, "testExternalStorage: ---------getFilesDir------------------");
-        Log.i(TAG, "External getFilesDir: " + storage.getExternalStorage().getFilesDir(Environment.DIRECTORY_DOWNLOADS));
-        Log.i(TAG, "External getFilesDirPath: " + storage.getExternalStorage().getFilesDirPath(Environment.DIRECTORY_DOWNLOADS));
-        Log.i(TAG, "External getFilesDirWithName: " + storage.getExternalStorage()
-                .getFilesDirWithName(Environment.DIRECTORY_DOWNLOADS, "test"));
+            Log.i(TAG, "External getDataPkgDir: " + ExternalStorage.getDataPkgDir(this));
+            Log.i(TAG, "External getDataPkgDirPath: " + ExternalStorage.getDataPkgDirPath(this));
+            Log.i(TAG, "External createDirInDataPkgDir: " + ExternalStorage.createDirInDataPkgDir(this, "hahaha"));
 
-        Log.i(TAG, "testExternalStorage: ---------getCacheDir------------------");
-        Log.i(TAG, "External getCacheDir: " + storage.getExternalStorage().getCacheDir());
-        Log.i(TAG, "External getCacheDirPath: " + storage.getExternalStorage().getCacheDirPath());
-        Log.i(TAG, "External getCacheDirWithName: " + storage.getExternalStorage()
-                .getCacheDirWithName("test"));
+            Log.i(TAG, "testExternalStorage: --------getStoragePublicDir------------");
 
+            Log.i(TAG, "External getStoragePublicDir: " + ExternalStorage
+                    .getStoragePublicDir(Environment.DIRECTORY_MUSIC));
+            Log.i(TAG, "External getStoragePublicDirPath: " + ExternalStorage
+                    .getStoragePublicDirPath(Environment.DIRECTORY_MUSIC));
+            Log.i(TAG, "External createDirInStoragePublicDir: " + ExternalStorage
+                    .createDirInStoragePublicDir(Environment.DIRECTORY_MUSIC, "TestMusic"));
 
+            Log.i(TAG, "testExternalStorage: ---------getFilesDir------------------");
+            Log.i(TAG, "External getFilesDir: " + ExternalStorage.getFilesDir(this, Environment.DIRECTORY_DOWNLOADS));
+            Log.i(TAG, "External getFilesDirPath: " + ExternalStorage.getFilesDirPath(this, Environment.DIRECTORY_DOWNLOADS));
+            Log.i(TAG, "External createDirInFilesDir: " + ExternalStorage
+                    .createDirInFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "test"));
+
+            Log.i(TAG, "testExternalStorage: ---------getCacheDir------------------");
+            Log.i(TAG, "External getCacheDir: " + ExternalStorage.getCacheDir(this));
+            Log.i(TAG, "External getCacheDirPath: " + ExternalStorage.getCacheDirPath(this));
+            Log.i(TAG, "External createFileInCacheDir: " + ExternalStorage
+                    .createDirInCacheDir(this, "test"));
+
+            Log.i(TAG, "testExternalStorage: -------------clear-----------------------");
+
+            Log.i(TAG, "getDataSize before: " + Formatter.formatFileSize(this, Storage.getDataSize(this)));
+            Storage.clearData(this);
+            Log.i(TAG, "getDataSize after: " + Formatter.formatFileSize(this, Storage.getDataSize(this)));
+
+            Log.i(TAG, "getCacheSize: before: " + Formatter.formatFileSize(this, Storage.getCacheSize(this)));
+            Storage.clearCache(this);
+            Log.i(TAG, "getCacheSize: after: " + Formatter.formatFileSize(this, Storage.getCacheSize(this)));
+        } else {
+            // Do not have permissions, request them now
+            EasyPermissions.requestPermissions(this, "request external perms",
+                    RC_EXTERNAL, perms);
+        }
     }
 
-    private void testPaths(){
+    private void testPaths() {
         File[] paths = StorageManagerCompat.getExternalStoragePaths(getApplicationContext());
         int length = paths.length;
         if (length > 0) {
@@ -124,5 +160,40 @@ public class MainActivity extends AppCompatActivity {
     private File[] getUsbPath() {
         File storage = new File("/storage");
         return storage.listFiles();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        // Some permissions have been granted
+        // ...
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        // Some permissions have been denied
+        Log.d(TAG, "onPermissionsDenied:" + requestCode + ":" + perms.size());
+
+        // (Optional) Check whether the user denied any permissions and checked "NEVER ASK AGAIN."
+        // This will display a dialog directing them to enable the permission in app settings.
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            new AppSettingsDialog.Builder(this).build().show();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
+            // Do something after user returned from app settings screen, like showing a Toast.
+            Toast.makeText(this, "returned_from_app_settings_to_activity", Toast.LENGTH_SHORT)
+                    .show();
+        }
     }
 }
